@@ -5,12 +5,12 @@ namespace urlshortner.Models
 {
     public class Link
     {
-        public Link(string? id, string? redirectLink, string? userId, DateTime createdAt)
+        public Link(string? id, string redirectLink, string? userId, DateTime createdAt)
         {
             Id = id;
             RedirectLink = redirectLink;
             UserId = userId;
-            CreatedAt = DateTime.Now;
+            CreatedAt = DateTime.UtcNow;
         }
 
         [Key]
@@ -19,7 +19,6 @@ namespace urlshortner.Models
         [Required(ErrorMessage = "Campo é obrigatório")]
         public string? RedirectLink { get; set; }
 
-        [Required(ErrorMessage = "Campo é obrigatório")]
         public string? UserId { get; set; }
 
         public DateTime CreatedAt { get; set; }

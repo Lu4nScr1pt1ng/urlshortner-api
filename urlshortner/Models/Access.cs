@@ -4,12 +4,13 @@ namespace urlshortner.Models
 {
     public class Access
     {
-        public Access(int id, string? ip, string? linkId, DateTime accesedAt)
+        public Access(int id, string? ip, string? linkId, DateTime accesedAt, string? creatorOfLinkId)
         {
             Id = id;
             Ip = ip;
             LinkId = linkId;
             AccesedAt = accesedAt;
+            CreatorOfLinkId = creatorOfLinkId;
         }
 
         [Key]
@@ -19,6 +20,8 @@ namespace urlshortner.Models
         public string? Ip { get; set; }
 
         public string? LinkId { get; set; }
+
+        public string? CreatorOfLinkId { get; set; }
 
         public DateTime AccesedAt { get; set; }
     }

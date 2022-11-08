@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using urlshortner.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +15,10 @@ builder.Services.AddResponseCompression(opt =>
 });
 
 
+
 builder.Services.AddControllers();
+
+var key = Encoding.ASCII.GetBytes(builder.Configuration.GetValue<string>("SECRET"));
 
 // Authentication
 builder.Services.AddAuthentication(x =>
@@ -35,9 +38,14 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-
 // Connection with DB
-builder.Services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Database"));
+// builder.Services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Database"));
+
+builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("connectionString")));
+
+
+
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -58,6 +66,7 @@ app.UseHttpsRedirection();
 app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

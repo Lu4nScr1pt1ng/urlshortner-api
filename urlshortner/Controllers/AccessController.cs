@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using urlshortner.Data;
 using urlshortner.Models;
 using urlshortner.Utils;
@@ -11,13 +13,19 @@ namespace urlshortner.Controllers
     {
         [HttpGet]
         [Route("")]
+        [Authorize]
         public async Task<ActionResult<List<Access>>> GetAllAccess(
             [FromServices] DataContext context
             )
         {
             try
             {
-                var accesses = await context.Accesses.AsNoTracking().ToListAsync();
+                var identity = HttpContext.User.Identity as ClaimsIdentity;
+                IEnumerable<Claim> claim = identity!.Claims;
+                var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                var accesses = await context.Accesses.Where(x => x.CreatorOfLinkId == userId).AsNoTracking().ToListAsync();
+
                 if (accesses == null)
                 {
                     return NotFound(new { message = "não foi encontrado nenhum acesso!" });
@@ -50,6 +58,7 @@ namespace urlshortner.Controllers
                     return NotFound(new { message = "id de link não encontrado" });
                 }
                 model.LinkId = id;
+                model.CreatorOfLinkId = redirectlink.UserId;
                 model.AccesedAt = DateTime.Now;
                 context.Accesses.Add(model);
                 await context.SaveChangesAsync();

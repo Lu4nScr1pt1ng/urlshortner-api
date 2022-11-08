@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using urlshortner.Data;
 using urlshortner.Models;
+using urlshortner.Services;
 
 namespace urlshortner.Controllers
 {
@@ -10,6 +12,7 @@ namespace urlshortner.Controllers
     {
         [HttpGet]
         [Route("")]
+        [Authorize]
         public async Task<ActionResult<List<User>>> Get(
             [FromServices] DataContext context
             )
@@ -41,6 +44,32 @@ namespace urlshortner.Controllers
             {
                 return BadRequest(new { message = "Não foi possível criar o usuário" });
             }
+        }
+
+        [HttpPost]
+        [Route("login")]
+        public async Task<ActionResult<dynamic>> Authenticate(
+            [FromServices] DataContext context,
+            [FromBody] User model
+            )
+        {
+            if (model == null || model.Email == null || model.Password == null) return BadRequest(new { message = "Email ou senha não inserido" });
+
+            var user = await context.Users.AsNoTracking().Where(x => x.Email == model.Email && x.Password == model.Password).FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound(new { message = "Email ou senha inválidos" });
+
+            var token = TokenService.GenerateToken(user);
+
+            user.Password = "";
+            return new
+            {
+                user = user,
+                token = token
+            };
+           
+            
         }
 
     }
