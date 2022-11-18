@@ -24,7 +24,7 @@ namespace urlshortner.Controllers
                 IEnumerable<Claim> claim = identity!.Claims;
                 var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-                var accesses = await context.Accesses.Where(x => x.CreatorOfLinkId == userId).AsNoTracking().ToListAsync();
+                var accesses = await context.Accesses!.Where(x => x.CreatorOfLinkId == userId).AsNoTracking().ToListAsync();
 
                 if (accesses == null)
                 {
@@ -39,7 +39,7 @@ namespace urlshortner.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("{id}")]
         public async Task<ActionResult<Access>> Access(
             string id,
@@ -47,27 +47,46 @@ namespace urlshortner.Controllers
             [FromBody] Access model
             )
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var redirectlink = await context.Links.FirstOrDefaultAsync(x => x.Id == id);
-                    if (redirectlink == null)
+                var redirectlink = await context.Links!.FirstOrDefaultAsync(x => x.Id == id);
+                if (redirectlink == null)
                 {
                     return NotFound(new { message = "id de link não encontrado" });
                 }
                 model.LinkId = id;
                 model.CreatorOfLinkId = redirectlink.UserId;
                 model.AccesedAt = DateTime.Now;
-                context.Accesses.Add(model);
+                context.Accesses!.Add(model);
                 await context.SaveChangesAsync();
 
-                return Ok(redirectlink?.RedirectLink);
+                return Ok(new { id = redirectlink.Id, redirectlink = redirectlink.RedirectLink });
+                //return Redirect(redirectlink.RedirectLink);
             }
             catch (Exception)
             {
                 return BadRequest(new { message = "Não foi possivel criar objeto no banco de dados" });
+            }
+        }
+
+        [HttpGet]
+        [Route("e/{id}")]
+        public async Task<ActionResult<List<Access>>> GetAccessesById(
+            string id,
+            [FromServices] DataContext context
+            )
+        {
+            try
+            {
+                var accesses = await context.Accesses!.Where(x => x.LinkId == id).ToListAsync();
+                return Ok(accesses);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "Erro ao obter informações no banco de dados" });
             }
         }
     }

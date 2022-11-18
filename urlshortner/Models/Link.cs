@@ -10,7 +10,7 @@ namespace urlshortner.Models
             Id = id;
             RedirectLink = redirectLink;
             UserId = userId;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = createdAt;
         }
 
         [Key]

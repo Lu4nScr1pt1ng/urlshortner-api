@@ -5,9 +5,24 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using urlshortner.Data;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins,
+                          policy =>
+                          {
+                              policy.WithOrigins("http://localhost:5173")
+                                                  .AllowAnyHeader()
+                                                  .AllowAnyMethod()
+                                                  .AllowCredentials();
+                          });
+});
+
+
 builder.Services.AddResponseCompression(opt =>
 {
     opt.Providers.Add<GzipCompressionProvider>();
@@ -63,7 +78,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+app.UseCors(MyAllowSpecificOrigins);
 
 
 app.UseAuthentication();

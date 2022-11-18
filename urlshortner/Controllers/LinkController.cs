@@ -22,7 +22,7 @@ namespace urlshortner.Controllers
             IEnumerable<Claim> claim = identity!.Claims;
             var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            var links = await context.Links.Where(x => x.UserId == userId).ToListAsync();
+            var links = await context.Links!.Where(x => x.UserId == userId).ToListAsync();
             return Ok(links);
         }
 
@@ -47,8 +47,9 @@ namespace urlshortner.Controllers
             {
                 model.Id = linkgenerator.Generate();
                 model.UserId = userId;
+                model.CreatedAt = DateTime.UtcNow;
 
-                context.Links.Add(model);
+                context.Links!.Add(model);
                 await context.SaveChangesAsync();
                 return Ok(model);
             }
