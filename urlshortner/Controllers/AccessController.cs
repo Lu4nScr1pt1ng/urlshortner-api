@@ -11,33 +11,34 @@ namespace urlshortner.Controllers
     [Route("go")]
     public class AccessController : Controller
     {
-        [HttpGet]
-        [Route("")]
-        [Authorize]
-        public async Task<ActionResult<List<Access>>> GetAllAccess(
-            [FromServices] DataContext context
-            )
-        {
-            try
-            {
-                var identity = HttpContext.User.Identity as ClaimsIdentity;
-                IEnumerable<Claim> claim = identity!.Claims;
-                var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+        //[HttpGet]
+        //[Route("")]
+        //[Authorize]
+        //public async Task<ActionResult<List<Access>>> GetAllAccess(
+        //    [FromServices] DataContext context
+        //    )
+        //{
+        //    try
+        //    {
+        //        var identity = HttpContext.User.Identity as ClaimsIdentity;
+        //        IEnumerable<Claim> claim = identity!.Claims;
+        //        var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-                var accesses = await context.Accesses!.Where(x => x.CreatorOfLinkId == userId).AsNoTracking().ToListAsync();
+        //        var accesses = await context.Accesses!.Where(x => x.CreatorOfLinkId == userId).AsNoTracking().ToListAsync();
 
-                if (accesses == null)
-                {
-                    return NotFound(new { message = "não foi encontrado nenhum acesso!" });
-                }
+        //        if (accesses.Count() == 0)
+        //        {
+        //            return NotFound(new { message = "não foi encontrado nenhum acesso!" });
+        //        }
 
-                return Ok(accesses);
-            }
-            catch (Exception)
-            {
-                return BadRequest(new { message = "Não foi possivel criar objeto no banco de dados" });
-            }
-        }
+        //        return Ok(accesses);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return BadRequest(new { message = "Não foi possivel criar objeto no banco de dados" });
+        //    }
+        //}
+
 
         [HttpPost]
         [Route("{id}")]
@@ -53,6 +54,7 @@ namespace urlshortner.Controllers
             try
             {
                 var redirectlink = await context.Links!.FirstOrDefaultAsync(x => x.Id == id);
+
                 if (redirectlink == null)
                 {
                     return NotFound(new { message = "id de link não encontrado" });
@@ -81,7 +83,14 @@ namespace urlshortner.Controllers
         {
             try
             {
-                var accesses = await context.Accesses!.Where(x => x.LinkId == id).ToListAsync();
+                var identity = HttpContext.User.Identity as ClaimsIdentity;
+                IEnumerable<Claim> claim = identity!.Claims;
+                var userId = claim.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+
+
+                var accesses = await context.Accesses!.Where(x => x.LinkId == id && x.CreatorOfLinkId == userId).ToListAsync();
+
+
                 return Ok(accesses);
             }
             catch (Exception)

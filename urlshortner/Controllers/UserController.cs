@@ -12,16 +12,16 @@ namespace urlshortner.Controllers
     [Route("v1/user")]
     public class UserController : Controller
     {
-        [HttpGet]
-        [Route("")]
-        [Authorize]
-        public async Task<ActionResult<List<User>>> Get(
-            [FromServices] DataContext context
-            )
-        {
-            var users = await context.Users!.AsNoTracking().ToListAsync();
-            return Ok(users);
-        }
+        //[HttpGet]
+        //[Route("")]
+        //[Authorize]
+        //public async Task<ActionResult<List<User>>> Get(
+        //    [FromServices] DataContext context
+        //    )
+        //{
+        //    var users = await context.Users!.AsNoTracking().ToListAsync();
+        //    return Ok(users);
+        //}
 
         [HttpGet]
         [Route("verify")]
@@ -53,6 +53,11 @@ namespace urlshortner.Controllers
 
             try
             {
+                var ver = context.Users!.FirstOrDefault(x => model.Email == x.Email);
+                if (ver != null)
+                {
+                    return BadRequest(new { message = "E-mail já usado" });
+                }
                 context.Users!.Add(model);
                 await context.SaveChangesAsync();
 
