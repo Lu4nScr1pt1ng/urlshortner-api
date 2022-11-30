@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Text;
 using urlshortner.Data;
 
@@ -55,17 +56,44 @@ builder.Services.AddAuthentication(x =>
 
 // Connection with DB
 // builder.Services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Database"));
+// builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("connectionString")));
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+var dbPass = Environment.GetEnvironmentVariable("DB_SA_PASSWORD");
 
-builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("connectionString")));
+var connectionString2 = $"Data Source={dbHost};Initial Catalog={dbName};User ID=sa;Password={dbPass};";
+var connectionString = $"Server={dbHost},1433;User ID=sa;Password={dbPass};Trusted_Connection=False; TrustServerCertificate=True;";
 
-
-
-
+builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer(connectionString));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+    var logger = serviceScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var db = serviceScope.ServiceProvider.GetRequiredService<DataContext>().Database;
+
+    logger.LogInformation("Migrating database...");
+
+    while (!db.CanConnect())
+    {
+        logger.LogInformation("Database not ready yet; waiting...");
+        Thread.Sleep(1000);
+    }
+
+    try
+    {
+        serviceScope.ServiceProvider.GetRequiredService<DataContext>().Database.Migrate();
+        logger.LogInformation("Database migrated successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

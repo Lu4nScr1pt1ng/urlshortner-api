@@ -11,6 +11,7 @@ namespace urlshortner.Services
         public static string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
+            // var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("SECRET")!);
             var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("SECRET")!);
             var tokenDescriptor = new SecurityTokenDescriptor()
             {

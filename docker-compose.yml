@@ -1,0 +1,31 @@
+version: '3.4'
+
+networks:
+  urlshortnerapp:
+
+services:
+  sqlserverdb:
+    container_name: url-shortner-db
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment: 
+        - ACCEPT_EULA=Y
+        - MSSQL_SA_PASSWORD=anotherbigpasswrigh@43423
+    networks:
+        - urlshortnerapp
+  urlshortner:
+    container_name: url-shortner-api
+    image: ${DOCKER_REGISTRY-}urlshortner
+    build:
+      context: .
+      dockerfile: urlshortner/Dockerfile
+    ports:
+        - 8001:443
+    depends_on:
+        - sqlserverdb
+    environment:
+        - DB_HOST=sqlserverdb
+        - DB_NAME=UrlShortner
+        - DB_SA_PASSWORD=anotherbigpasswrigh@43423
+        - SECRET=efhskdj4jdah58hafkh492jfjeslll/F34JJCCCles*fvf4
+    networks:
+        - urlshortnerapp
